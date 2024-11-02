@@ -1,39 +1,96 @@
-// Отримати елемент за ID
-const title = document.getElementById('title');
-console.log('Елемент за ID:', title);
+const display = document.querySelector(".display");
+const historyDisplay = document.querySelector("#history");
+const buttons = document.querySelectorAll("button");
+const specialChars = ["%", "*", "/", "-", "+", "="];
+let firstValue = '';
+let operator = '';
+let secondValue = '';
 
-// Змінити текст заголовка через 3 секунди
-setTimeout(() => {
-    title.textContent = 'DOM у дії!';
-}, 3000);
+const isNumber = (value) => !isNaN(value) && value.trim() !== '';
 
-// Отримати всі елементи з класом 'item'
-const items = document.getElementsByClassName('item');
-console.log('Елементи з класом "item":', items);
+const updateHistory = () => {
+  if (firstValue !== '' && operator !== '' && secondValue === '') {
+    historyDisplay.textContent = firstValue + ' ' + operator;
+  } else if (firstValue !== '' && operator !== '' && secondValue !== '') {
+    historyDisplay.textContent = firstValue + ' ' + operator + ' ' + secondValue;
+  }
+};
 
-// Змінити текст другого пункту
-if (items.length > 1) {
-    items[1].textContent = 'Змінений пункт 2';
-}
+const calculate = (btnValue) => {
+  display.focus();
+  
+  if (btnValue === "AC") {
+    firstValue = '';
+    operator = '';
+    secondValue = '';
+    display.value = '';
+    historyDisplay.textContent = '';
+  } else if (btnValue === "DEL") {
+    if (operator === '') {
+      firstValue = firstValue.slice(0, -1);
+      display.value = firstValue;
+    } else {
+      secondValue = secondValue.slice(0, -1);
+      display.value = secondValue;
+    }
+    updateHistory();
+  } else if (btnValue === "=") {
+    if (!isNumber(firstValue) || !isNumber(secondValue) || operator === '') {
+      display.value = 'Помилка!';
+      return;
+    }
 
-// Отримати перший елемент списку за селектором
-const firstItem = document.querySelector('#itemList .item');
-console.log('Перший пункт списку:', firstItem);
+    let result;
+    const num1 = parseFloat(firstValue);
+    const num2 = parseFloat(secondValue);
 
-// Додати обробник події для кнопки зміни тексту
-document.getElementById('changeTextButton').addEventListener('click', function() {
-    title.textContent = 'Текст змінився!';
-});
+    switch (operator) {
+      case '+':
+        result = num1 + num2;
+        break;
+      case '-':
+        result = num1 - num2;
+        break;
+      case '*':
+        result = num1 * num2;
+        break;
+      case '/':
+        if (num2 === 0) {
+          display.value = 'Ділення на нуль!';
+          return;
+        }
+        result = num1 / num2;
+        break;
+      default:
+        display.value = 'Помилка!';
+        return;
+    }
 
-const arrayOfItems = document.getElementsByClassName('item');
-console.log(arrayOfItems.length, "FLJKSNfKSNf")
+    display.value = (result % 1 === 0) ? result : result.toFixed(2);
+    firstValue = display.value;
+    operator = '';
+    secondValue = '';
+    historyDisplay.textContent = '';
+  } else if (specialChars.includes(btnValue)) {
+    if (!isNumber(firstValue)) {
+      display.value = 'Помилка!';
+      return;
+    }
+    operator = btnValue;
+    secondValue = '';
+    updateHistory();
+  } else {
+    if (operator === '') {
+      firstValue += btnValue;
+      display.value = firstValue;
+    } else {
+      secondValue += btnValue;
+      display.value = secondValue;
+    }
+    updateHistory();
+  }
+};
 
-// Додати обробник події для кнопки додавання пункту
-document.getElementById('addItemButton').addEventListener('click', function() {
-    const newItem = document.createElement('li');
-    const arrayOfItems = document.getElementsByClassName('item');
-    console.log(arrayOfItems.length, "FLJKSNfKSNf")
-    newItem.textContent = `Новий пункт ${arrayOfItems.length + 1}`;
-    newItem.className = 'item';
-    document.getElementById('itemList').appendChild(newItem);
+buttons.forEach((button) => {
+  button.addEventListener("click", (e) => calculate(e.target.dataset.value));
 });
